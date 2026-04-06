@@ -5,7 +5,7 @@ void ofApp::setup(){
     ofBackground(255);
     world = std::make_shared<ofxBox2d>();
     world->init();
-    world->setGravity(-0.25f,2.75f);
+    world->setGravity(-1.25f,2.75f);
     world->setFPS(60);
     world->setIterations(10, 10); // default is 8/3 — more iterations = more stable joints
     world->createBounds();
