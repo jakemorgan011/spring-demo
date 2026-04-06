@@ -1,0 +1,6 @@
+bin/
+*.xcconfig
+*.plist
+*.entitlements
+MakeFile
+*.xcodeproj
