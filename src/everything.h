@@ -269,6 +269,7 @@ public:
 
     virtual void apply_force(ofVec2f force) = 0;
     virtual void check_bounds(float w, float h) = 0;
+    virtual ofVec2f get_velocity() { return {0.f, 0.f}; }
 
 protected:
     std::shared_ptr<ofxBox2d> world;
@@ -363,6 +364,12 @@ public:
         for(auto& p : particles) bounce(p, w, h);
     }
 
+    ofVec2f get_velocity() override {
+        if(!center) return {0.f, 0.f};
+        b2Vec2 v = center->body->GetLinearVelocity();
+        return {v.x, v.y};
+    }
+
     void set_spring(float freq, float damp){ spring_freq = freq; spring_damp = damp; }
 
 private:
@@ -405,6 +412,12 @@ public:
         b2Vec2 vel = shape->body->GetLinearVelocity();
         if(pos.x < 0 || pos.x > w) shape->body->SetLinearVelocity(b2Vec2(-vel.x,  vel.y));
         if(pos.y < 0 || pos.y > h) shape->body->SetLinearVelocity(b2Vec2( vel.x, -vel.y));
+    }
+
+    ofVec2f get_velocity() override {
+        if(!shape) return {0.f, 0.f};
+        b2Vec2 v = shape->body->GetLinearVelocity();
+        return {v.x, v.y};
     }
 
 private:
@@ -528,7 +541,7 @@ public:
         return radius * r_scale;
     }
     void set_scale(float s){ r_scale = s; }
-    tVec2f get_vel(){ return vel; }
+    virtual tVec2f get_vel(){ return vel; }
 protected:
     tVec2f pos = {0.f,0.f};
     tVec2f accel = {0.f,0.f};
@@ -660,6 +673,13 @@ public:
             }
         }
         return pos;
+    }
+    tVec2f get_vel() override {
+        if(physics){
+            ofVec2f v = physics->get_velocity();
+            return {v.x, v.y};
+        }
+        return mover::get_vel();
     }
 protected:
     tVec2f bounds;

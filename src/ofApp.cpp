@@ -7,7 +7,7 @@ void ofApp::setup(){
     world->init();
     world->setGravity(-1.25f,2.75f);
     world->setFPS(60);
-    world->setIterations(10, 10); // default is 8/3 — more iterations = more stable joints
+    world->setIterations(20, 20); // default is 8/3 — more iterations = more stable joints
     world->createBounds();
     c.set_size(ofGetWidth(), ofGetHeight());
     c.init(world);
