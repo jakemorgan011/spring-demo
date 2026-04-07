@@ -1,6 +1,7 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
+// THERE IS A BUG WHERE WORLD AND DISPLAY GO OUT OF SYNC WHEN SWITCHING TO FULL SCREEN.
 void ofApp::setup(){
     ofBackground(255);
     world = std::make_shared<ofxBox2d>();

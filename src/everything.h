@@ -255,6 +255,7 @@ struct tVec2f{
            |___/
  */
 /// we'll be using ofxBox2d as our physics engine.
+///  don't worry if this is confusing. it's confusing for me too :D we're just going to focus on the implementation.
 
 class body {
     /// holds a shared Box2D world reference and defines the interface all physics bodies must implement.
@@ -267,7 +268,7 @@ public:
     virtual void update() = 0;
     virtual std::vector<ofVec2f> get_positions() = 0; // drawable reads this each frame to build its path
 
-    virtual void apply_force(ofVec2f force) = 0;
+    virtual void apply_force(ofVec2f force) = 0; // these are unnecessary and are handled by the physics engine... lol sorry
     virtual void check_bounds(float w, float h) = 0;
     virtual ofVec2f get_velocity() { return {0.f, 0.f}; }
 
@@ -558,27 +559,6 @@ private:
     float height = radius;
 };
 
-class spinner : public mover {
-    /// a mover that rotates around its own center.
-    /// spin_speed controls degrees per frame — positive = clockwise, negative = counter-clockwise.
-    /// inherits all mover physics (pos, vel, accel, apply_force) so it can move AND spin at the same time.
-public:
-    void update() override {
-        mover::update(); // handles pos/vel/accel
-        angle += spin_speed;
-    }
-    void set_spin(float degrees_per_frame){
-        spin_speed = degrees_per_frame;
-    }
-    float get_angle(){
-        return angle;
-    }
-protected:
-    float angle = 0.f;
-    float spin_speed = 1.f; // degrees per frame
-};
-
-
 // not entirely necessary
 class background : public drawable{
 public:
@@ -699,8 +679,8 @@ class static_glob : public glob {
     /// spins its visual shape each frame around its center.
 public:
     void init(std::shared_ptr<ofxBox2d> world) override {
-        float cx     = pos.x;
-        float cy     = pos.y;
+        float cx = pos.x;
+        float cy = pos.y;
         float radius = std::min(bounds.x, bounds.y) * 0.5f * get_radius();
         physics = std::make_unique<spinning_body>(world, spin_speed);
         physics->setup(cx, cy, radius, num_vert);
@@ -734,7 +714,7 @@ public:
     void set_scale(float s){ r_scale = s; } // controls radius — default 0.25, larger = bigger
 
 private:
-    float angle      = 0.f;
+    float angle = 0.f;
     float spin_speed = 1.8f;
 };
 
@@ -816,8 +796,8 @@ private:
 class canvas : public component {
 public:
     canvas(){ // add new components here
-        add_member("glob",        std::make_shared<glob>());
-        add_member("glob2",       std::make_shared<glob>());
+        add_member("glob", std::make_shared<glob>());
+        add_member("glob2", std::make_shared<glob>());
         add_member("static_glob", std::make_shared<static_glob>());
         add_member("data_display", std::make_shared<data_display>());
         add_member("data_display2", std::make_shared<data_display>());
@@ -852,17 +832,18 @@ public:
         for(auto& m : members)
             m.second->update();
     }
-    void init(std::shared_ptr<ofxBox2d> world){
+    void init(std::shared_ptr<ofxBox2d> w){
+        world = w;
         for(auto& m : members){
             m.second->init(world);
         }
     }
     void resized(const float& w, const float& h){
-        width = w;
-        height = h;
-        named_members["glob"]->set_bounds(width, height);
-        named_members["glob2"]->set_bounds(width, height);
-        named_members["static_glob"]->set_bounds(width, height);
+        set_size(w, h);       // recomputes all pixel positions from normalized coords
+        if(world){
+            for(auto& m : members)
+                m.second->init(world); // destroys old bodies, creates new ones at correct positions/sizes
+        }
     }
     void binds(){
         named_members["data_display"]->set_pos(20.f, 20.f);
@@ -871,5 +852,6 @@ public:
         named_members["data_display2"]->bind_to_drawable(named_members["glob2"]);
     }
 private:
+    std::shared_ptr<ofxBox2d> world;
 };
 }
